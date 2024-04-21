@@ -33,12 +33,12 @@ public class AfazeresControllerTest {
 
     @Test
     public void testSalvarTarefa() {
-        // Arrange
+
         Afazeres tarefa = new Afazeres();
         when(repository.save(tarefa)).thenReturn(tarefa);
 
 
-       Long id = controller.idTarefaSalva(tarefa);
+        Long id = controller.idTarefaSalva(tarefa);
 
         verify(repository).save(tarefa);
     }
