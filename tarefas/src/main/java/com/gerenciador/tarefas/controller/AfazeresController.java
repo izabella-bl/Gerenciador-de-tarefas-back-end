@@ -4,6 +4,7 @@ package com.gerenciador.tarefas.controller;
 import com.gerenciador.tarefas.model.Afazeres;
 import com.gerenciador.tarefas.repository.AfazeresRepository;
 import com.gerenciador.tarefas.repository.UsuarioRepository;
+import com.gerenciador.tarefas.service.HistoricoService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -22,7 +23,8 @@ public class AfazeresController {
     public AfazeresRepository repository;
 
     @Autowired
-    public UsuarioRepository usuarioRepository;
+    public HistoricoService historicoService;
+
 
     @ApiOperation(value = "Salva a tarefa do usurio e retorna o seu Id")
     @ApiResponses(value = {
@@ -31,6 +33,7 @@ public class AfazeresController {
     @PostMapping("tarefa/save")
     public Long idTarefaSalva (@RequestBody Afazeres tarefa) {
         Afazeres tarefaSalva = repository.save(tarefa);
+        historicoService.salvarHistorico(tarefaSalva,"salva");
         return tarefaSalva.getId();
     }
 
@@ -54,6 +57,7 @@ public class AfazeresController {
     })
     @DeleteMapping("tarefa/deletar")
     public ResponseEntity<?> deletarTarefa(@RequestParam Long id,@RequestParam Long idUsuario) {
+        historicoService.deletarHistorico(id);
         repository.deleteByIdAndUsuarioId(id, idUsuario);
         return new ResponseEntity(HttpStatus.OK);
     }
@@ -63,7 +67,8 @@ public class AfazeresController {
             @ApiResponse(code = 200, message = "Tarefa atulizada com sucesso"),
     })
     @PostMapping("tarefa/atualizar")
-    public ResponseEntity<?> atualizarTarefa (@RequestBody Afazeres tarefa) {
+    public ResponseEntity<?> atualizarTarefa (@RequestBody Afazeres tarefa, @RequestParam String indicaAtualizarDados) {
+        historicoService.salvarHistorico(tarefa, indicaAtualizarDados);
         repository.save(tarefa);
         return new ResponseEntity(HttpStatus.OK);
     }

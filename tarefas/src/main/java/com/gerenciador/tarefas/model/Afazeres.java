@@ -4,11 +4,12 @@ package com.gerenciador.tarefas.model;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 
-@Builder
 @Getter
+@Setter
 @Entity
 @Table(name = "tarefas")
 public class Afazeres {
@@ -35,12 +36,4 @@ public class Afazeres {
     }
 
 
-    @Builder
-    public Afazeres(Long id, String titulo, String descricao, String situacao, Usuario usuario) {
-        this.id = id;
-        this.titulo = titulo;
-        this.descricao = descricao;
-        this.situacao = situacao;
-        this.usuario = usuario;
-    }
 }

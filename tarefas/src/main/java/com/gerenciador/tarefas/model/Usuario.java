@@ -1,6 +1,7 @@
 package com.gerenciador.tarefas.model;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 

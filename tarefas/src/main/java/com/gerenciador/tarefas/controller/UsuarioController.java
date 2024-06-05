@@ -42,12 +42,12 @@ public class UsuarioController {
     public ResponseEntity<?> saveUsuario(@RequestBody Usuario user) {
         boolean isEmailValid = service.isEmailValid(user.getEmail());
         boolean isUserValid = service.isUserValid(user);
-        if (isUserValid) {
+//        if (isUserValid) {
             repository.save(user);
             return new ResponseEntity(HttpStatus.OK);
-        }else {
-            return new ResponseEntity(HttpStatus.BAD_REQUEST);
-        }
+//        }else {
+//            return new ResponseEntity(HttpStatus.BAD_REQUEST);
+//        }
     }
 
 }

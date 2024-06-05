@@ -1,88 +1,111 @@
 package com.gerenciador.tarefas.controller;
 
+import com.gerenciador.tarefas.controller.UsuarioController;
 import com.gerenciador.tarefas.model.Usuario;
 import com.gerenciador.tarefas.repository.UsuarioRepository;
 import com.gerenciador.tarefas.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class UsuarioControllerTest {
 
-    @Mock
-    private UsuarioRepository repository;
+    private MockMvc mockMvc;
 
     @Mock
-    private UsuarioService service;
+    private UsuarioRepository usuarioRepository;
 
-    @InjectMocks
-    private UsuarioController controller;
+    @Mock
+    private UsuarioService usuarioService;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        UsuarioController usuarioController = new UsuarioController();
+        usuarioController.repository = usuarioRepository;
+        usuarioController.service = usuarioService;
+        mockMvc = MockMvcBuilders.standaloneSetup(usuarioController).build();
     }
 
     @Test
-    public void testBuscaUsuario() {
-
-        String email = "test@example.com";
+    public void testBuscaUsuario() throws Exception {
+        // Arrange
         Usuario usuario = new Usuario();
-        when(repository.findByEmail(email)).thenReturn(Optional.of(usuario));
+        usuario.setId(1L);
+        usuario.setEmail("test@example.com");
 
-        Optional<Usuario> result = controller.buscaUsuario(email);
+        when(usuarioRepository.findByEmail("test@example.com")).thenReturn(Optional.of(usuario));
 
-        assertEquals(usuario, result.get());
-        verify(repository).findByEmail(email);
+
+        mockMvc.perform(get("/usuario")
+                        .param("email", "test@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.email").value("test@example.com"));
+
+        verify(usuarioRepository, times(1)).findByEmail("test@example.com");
     }
 
     @Test
-    public void testSaveUsuario_ComUsuarioValido() {
+    public void testSaveUsuario() throws Exception {
+        // Arrange
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setEmail("test@example.com");
 
-        Usuario user = new Usuario();
-        when(service.isEmailValid(user.getEmail())).thenReturn(true);
-        when(service.isUserValid(user)).thenReturn(true);
+        when(usuarioService.isEmailValid("test@example.com")).thenReturn(true);
+        when(usuarioService.isUserValid(any(Usuario.class))).thenReturn(true);
 
-        ResponseEntity<?> responseEntity = controller.saveUsuario(user);
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        verify(repository).save(user);
+        mockMvc.perform(post("/usuario/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"test@example.com\"}"))
+                .andExpect(status().isOk());
+
+        verify(usuarioRepository, times(1)).save(any(Usuario.class));
     }
 
     @Test
-    public void testSaveUsuario_ComEmailInvalido() {
-
-        Usuario user = new Usuario();
-        when(service.isEmailValid(user.getEmail())).thenReturn(false);
-
-
-        ResponseEntity<?> responseEntity = controller.saveUsuario(user);
+    public void testSaveUsuarioInvalidEmail() throws Exception {
+        // Arrange
+        when(usuarioService.isEmailValid("invalid-email")).thenReturn(false);
 
 
-        assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
-        verify(repository, never()).save(user);
+        mockMvc.perform(post("/usuario/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"invalid-email\"}"))
+                .andExpect(status().isBadRequest());
+
+        verify(usuarioRepository, times(0)).save(any(Usuario.class));
     }
 
     @Test
-    public void testSaveUsuario_ComUsuarioInvalido() {
+    public void testSaveUsuarioAlreadyExists() throws Exception {
 
-        Usuario user = new Usuario();
-        when(service.isEmailValid(user.getEmail())).thenReturn(true);
-        when(service.isUserValid(user)).thenReturn(false);
+        Usuario usuario = new Usuario();
+        usuario.setEmail("test@example.com");
+
+        when(usuarioService.isEmailValid("test@example.com")).thenReturn(true);
+        when(usuarioService.isUserValid(any(Usuario.class))).thenReturn(false);
 
 
-        ResponseEntity<?> responseEntity = controller.saveUsuario(user);
+        mockMvc.perform(post("/usuario/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"test@example.com\"}"))
+                .andExpect(status().isBadRequest());
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        verify(repository, never()).save(user);
+        verify(usuarioRepository, times(0)).save(any(Usuario.class));
     }
 }
