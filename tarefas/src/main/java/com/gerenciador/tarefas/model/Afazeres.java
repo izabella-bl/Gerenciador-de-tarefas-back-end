@@ -29,6 +29,15 @@ public class Afazeres {
     @ApiModelProperty(value = "Situação da tarefa")
     private String situacao;
 
+    @ApiModelProperty(value = "Verifica se possui prazo")
+    private boolean isPrazo;
+
+    @ApiModelProperty(value = "Data de prazo")
+    private String dataPrazo;
+
+    @ApiModelProperty(value = "Verifica o grau da tarefa")
+    private String grau;
+
     @ManyToOne
     private Usuario usuario;
 

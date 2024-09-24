@@ -37,8 +37,9 @@ public class HistoricoService {
         String retorno = switch (acao){
             case "andamento" -> "Status da atividade atualizada para: andamento.";
             case "finalizada" -> "Status da atividade atualizada para: finalizada.";
+            case "fazer" -> "Status da atividade atualizada para: a fazer";
             case "salva" -> "Atividade salva com sucesso.";
-            case "S" -> "Descrição de atividade atualizadas.";
+            case "S" -> "Dados da atividade atualizados.";
             default -> "";
         };
 

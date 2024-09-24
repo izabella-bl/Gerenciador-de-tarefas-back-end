@@ -2,8 +2,10 @@ package com.gerenciador.tarefas.controller;
 
 
 import com.gerenciador.tarefas.model.Afazeres;
+import com.gerenciador.tarefas.model.DadosDto;
 import com.gerenciador.tarefas.repository.AfazeresRepository;
 import com.gerenciador.tarefas.repository.UsuarioRepository;
+import com.gerenciador.tarefas.service.AfazeresService;
 import com.gerenciador.tarefas.service.HistoricoService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,16 +28,23 @@ public class AfazeresController {
     @Autowired
     public HistoricoService historicoService;
 
+    @Autowired
+    public AfazeresService afazeresService;
+
 
     @ApiOperation(value = "Salva a tarefa do usurio e retorna o seu Id")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Tarefa salva com sucesso"),
     })
     @PostMapping("tarefa/save")
-    public Long idTarefaSalva (@RequestBody Afazeres tarefa) {
+    public DadosDto idTarefaSalva (@RequestBody Afazeres tarefa) {
+        tarefa.setGrau(afazeresService.verificaData(tarefa));
         Afazeres tarefaSalva = repository.save(tarefa);
         historicoService.salvarHistorico(tarefaSalva,"salva");
-        return tarefaSalva.getId();
+
+        DadosDto dados = DadosDto.builder().id(tarefaSalva.getId()).grau(tarefaSalva.getGrau()).build();
+
+        return dados;
     }
 
 
@@ -48,7 +58,16 @@ public class AfazeresController {
     @ApiOperation(value = "Busca as tarefas do usuario, pela situação")
     @GetMapping("/tarefa/situacao")
     public List<Afazeres> listaSituacao(@RequestParam String situacao,@RequestParam Long id) {
-       return repository.findBySituacao(situacao,id);
+        List<Afazeres>  tarefasAtulizadas = new ArrayList<>();
+        List<Afazeres> tarefas = repository.findBySituacao(situacao,id);
+        for (Afazeres tarefa: tarefas) {
+            if(!tarefa.getDataPrazo().isBlank()){
+
+                tarefa.setGrau(afazeresService.verificaData(tarefa));
+            }
+            tarefasAtulizadas.add(tarefa);
+        }
+       return tarefasAtulizadas;
     }
 
     @ApiOperation(value = "Deleta a tarefa pelo ID")
@@ -68,6 +87,8 @@ public class AfazeresController {
     })
     @PostMapping("tarefa/atualizar")
     public ResponseEntity<?> atualizarTarefa (@RequestBody Afazeres tarefa, @RequestParam String indicaAtualizarDados) {
+
+        tarefa.setGrau(afazeresService.verificaData(tarefa));
         historicoService.salvarHistorico(tarefa, indicaAtualizarDados);
         repository.save(tarefa);
         return new ResponseEntity(HttpStatus.OK);
